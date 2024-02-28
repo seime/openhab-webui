@@ -33,12 +33,34 @@
         <f7-block-title v-if="$store.getters.isAdmin" v-t="'sidebar.administration'" />
         <!-- Settings -->
         <f7-list class="admin-links" v-if="$store.getters.isAdmin">
+
+          <!-- Loop links -->
+          <f7-list-item v-for="link in externalLinks.filter((b) => b.location === 'ADMINISTRATION_MENU')" :animate="false" :key="link.url"
+                        :link="link.url"
+                        target="_blank"
+                        external
+                        :title="link.label" view=".view-main" panel-close>
+          </f7-list-item>
+          <!-- Loop links end -->
+
+
+
           <f7-list-item link="/settings/" :title="$t('sidebar.settings')" view=".view-main" panel-close :animate="false"
                         :class="{ currentsection: currentUrl === '/settings/' || currentUrl.indexOf('/settings/services/') === 0 || currentUrl.indexOf('/settings/addons/') === 0 || currentUrl.indexOf('/settings/persistence/') === 0 }">
             <f7-icon slot="media" ios="f7:gear_alt_fill" aurora="f7:gear_alt_fill" md="material:settings" color="gray" />
           </f7-list-item>
           <li v-if="showSettingsSubmenu">
             <ul class="menu-sublinks">
+              <!-- Loop links -->
+              <f7-list-item v-for="link in externalLinks.filter((b) => b.location === 'SETTINGS_MENU')" :animate="false" :key="link.url"
+                            :link="link.url"
+                            target="_blank"
+                            external
+                            :title="link.label" view=".view-main" panel-close>
+              </f7-list-item>
+              <!-- Loop links end -->
+
+
               <f7-list-item v-if="$store.getters.apiEndpoint('things')" link="/settings/things/" title="Things" view=".view-main" panel-close :animate="false" no-chevron
                             :class="{ currentsection: currentUrl.indexOf('/settings/things') === 0 }">
                 <f7-icon slot="media" f7="lightbulb" color="gray" />
@@ -391,7 +413,8 @@ export default {
       activeDock: 'tools',
       activeToolTab: 'pin',
       activeHelpTab: 'current',
-      currentUrl: ''
+      currentUrl: '',
+      externalLinks: [],
     }
   },
   i18n: {
@@ -417,6 +440,8 @@ export default {
   },
   methods: {
     loadData (useCredentials) {
+      this.loadExternalLinks()
+
       const useCredentialsPromise = (useCredentials) ? this.setBasicCredentials() : Promise.resolve()
       return useCredentialsPromise
         .then(() => { return Framework7.request.promise.json('/rest/') })
@@ -606,7 +631,13 @@ export default {
       this.showDeveloperSubmenu = newUrl.indexOf('/developer/') === 0
       this.currentUrl = newUrl
       this.$store.commit('setPagePath', this.currentUrl)
+    },
+    loadExternalLinks() {
+      this.$oh.api.get('/rest/ui/external?lang={{lang}}').then((data) => {
+        this.externalLinks = data;
+      });
     }
+
   },
   created () {
     this.AddonIcons = AddonIcons
@@ -714,6 +745,7 @@ export default {
       }
 
       this.startEventSource()
+
     })
   }
 }
